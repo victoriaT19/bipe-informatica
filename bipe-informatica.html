@@ -1,0 +1,547 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bipe Informática 96</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=VT323&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: a shop counter in 1996 — customer at the left, CRT on the bench in the middle, tool rack at the right; stacks on phones */
+:root {
+  --wall: #1d5f5c;
+  --wall-deep: #164a48;
+  --plastic: #d8d1bc;
+  --plastic-hi: #efe9d8;
+  --plastic-lo: #9d9580;
+  --ink: #1d1b16;
+  --ink-soft: #4a463c;
+  --crt: #08140c;
+  --phosphor: #8cf7a4;
+  --phosphor-dim: #4da865;
+  --amber: #f2b33d;
+  --alert: #c4392c;
+  --good: #2f8a4a;
+  --postit: #f3e27a;
+  --f-display: "Pixelify Sans", "Courier New", monospace;
+  --f-crt: "VT323", "Courier New", monospace;
+  --f-body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--wall);
+  background-image: repeating-linear-gradient(0deg, transparent 0 22px, rgba(0,0,0,.06) 22px 23px);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 32px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 14px; }
+
+/* bevelled plastic, the period's one true material */
+.bevel {
+  background: var(--plastic);
+  border: 2px solid;
+  border-color: var(--plastic-hi) var(--plastic-lo) var(--plastic-lo) var(--plastic-hi);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.sunken {
+  border: 2px solid;
+  border-color: var(--plastic-lo) var(--plastic-hi) var(--plastic-hi) var(--plastic-lo);
+}
+
+header.bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; }
+.titlebar {
+  flex: 1 1 320px;
+  background: linear-gradient(90deg, var(--wall-deep), var(--wall));
+  color: var(--plastic-hi);
+  padding: 8px 12px;
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+.titlebar h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; }
+.titlebar small { font-size: 12px; opacity: .8; letter-spacing: .06em; text-transform: uppercase; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; align-items: center; }
+.stat { padding: 3px 10px; background: var(--plastic-hi); font-family: var(--f-display); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat b { font-weight: 700; }
+.stat .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-right: 6px; font-family: var(--f-body); }
+.stars { color: var(--amber); letter-spacing: 1px; text-shadow: 0 1px 0 var(--ink); }
+.stars .off { color: var(--plastic-lo); text-shadow: none; }
+
+.grid { display: grid; grid-template-columns: 280px minmax(0,1fr) 250px; gap: 14px; align-items: start; }
+@media (max-width: 980px) { .grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .bench { grid-column: 1 / -1; order: -1; } }
+@media (max-width: 620px) { .grid { grid-template-columns: minmax(0,1fr); } }
+
+.panel { padding: 12px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { margin: 0; font-family: var(--f-display); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* customer */
+.who { display: flex; gap: 12px; align-items: center; }
+.avatar { width: 52px; height: 52px; flex: none; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 20px; color: var(--plastic-hi); box-shadow: 0 0 0 2px var(--ink); image-rendering: pixelated; }
+.who .name { font-weight: 600; font-size: 16px; }
+.who .desc { font-size: 13px; color: var(--ink-soft); }
+.bubble { position: relative; background: var(--plastic-hi); padding: 12px 14px; font-size: 15px; line-height: 1.45; box-shadow: 0 0 0 2px var(--ink); }
+.bubble::before { content: ""; position: absolute; top: -9px; left: 20px; border: 8px solid transparent; border-bottom-color: var(--ink); border-top: 0; }
+.os { font-family: var(--f-crt); font-size: 18px; color: var(--ink-soft); }
+
+.postit { background: var(--postit); padding: 12px 14px 14px; transform: rotate(-1.2deg); box-shadow: 2px 3px 0 rgba(0,0,0,.25); font-size: 13px; line-height: 1.5; }
+.postit h3 { margin: 0 0 6px; font-family: var(--f-display); font-size: 14px; }
+.postit table { border-collapse: collapse; width: 100%; }
+.postit td { padding: 2px 0; vertical-align: top; }
+.postit td:first-child { font-family: var(--f-crt); font-size: 17px; white-space: nowrap; padding-right: 10px; }
+
+/* CRT */
+.bench { padding: 14px; display: grid; gap: 12px; }
+.monitor { padding: 18px 18px 26px; border-radius: 10px 10px 4px 4px; position: relative; }
+.monitor::after { content: "BIPEVISION 14\""; position: absolute; bottom: 6px; left: 20px; font-family: var(--f-display); font-size: 10px; letter-spacing: .14em; color: var(--ink-soft); }
+.monitor .led { position: absolute; bottom: 9px; right: 22px; width: 8px; height: 8px; border-radius: 50%; background: var(--plastic-lo); box-shadow: 0 0 0 1px var(--ink); }
+.monitor .led.on { background: var(--phosphor); box-shadow: 0 0 0 1px var(--ink), 0 0 6px var(--phosphor); }
+.screen {
+  background: var(--crt); color: var(--phosphor);
+  font-family: var(--f-crt); font-size: 20px; line-height: 1.2;
+  height: 340px; overflow-y: auto; padding: 14px 16px;
+  border-radius: 14px / 18px;
+  box-shadow: inset 0 0 40px rgba(0,0,0,.9), inset 0 0 0 2px #000;
+  text-shadow: 0 0 4px rgba(140,247,164,.55);
+  position: relative;
+}
+.screen::before { content: ""; position: sticky; top: 0; display: block; height: 0; }
+.screen .line { white-space: pre-wrap; overflow-wrap: anywhere; animation: type .25s steps(6) both; }
+.screen .ts { color: var(--phosphor-dim); }
+.screen .cmd { color: var(--amber); text-shadow: 0 0 4px rgba(242,179,61,.5); }
+.screen .cursor::after { content: "_"; animation: blink 1s steps(1) infinite; }
+@keyframes type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes blink { 50% { opacity: 0; } }
+
+.desk { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.hint { font-size: 13px; color: var(--ink-soft); flex: 1 1 220px; }
+
+/* buttons */
+button {
+  font: inherit; color: var(--ink); cursor: pointer;
+  background: var(--plastic); padding: 8px 12px; text-align: left;
+  border: 2px solid; border-color: var(--plastic-hi) var(--plastic-lo) var(--plastic-lo) var(--plastic-hi);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+button:active:not(:disabled) { border-color: var(--plastic-lo) var(--plastic-hi) var(--plastic-hi) var(--plastic-lo); transform: translateY(1px); }
+button:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
+button:disabled { color: var(--plastic-lo); cursor: default; }
+.tool { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
+.tool .min { font-family: var(--f-crt); font-size: 18px; color: var(--ink-soft); white-space: nowrap; }
+.tool.used { background: var(--plastic-lo); color: var(--ink-soft); }
+.tool.used .min::before { content: "feito · "; }
+.tools { display: grid; gap: 8px; }
+.primary { background: var(--amber); font-family: var(--f-display); font-weight: 700; font-size: 16px; text-align: center; }
+.primary:disabled { background: var(--plastic); }
+.ghost { font-size: 13px; padding: 5px 10px; }
+
+/* diagnosis sheet */
+.sheet { padding: 14px; display: grid; gap: 12px; }
+.sheet[hidden] { display: none !important; }
+.sheet h2 { font-family: var(--f-display); font-size: 18px; margin: 0; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.opt { display: flex; justify-content: space-between; gap: 10px; }
+.opt span:last-child { font-family: var(--f-crt); font-size: 18px; white-space: nowrap; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.verdict { padding: 12px 14px; background: var(--plastic-hi); box-shadow: 0 0 0 2px var(--ink); line-height: 1.5; }
+.verdict.ok { border-left: 8px solid var(--good); }
+.verdict.bad { border-left: 8px solid var(--alert); }
+.money { font-family: var(--f-crt); font-size: 22px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.summary div { background: var(--plastic-hi); padding: 8px 10px; box-shadow: 0 0 0 1px var(--ink); }
+.summary .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); }
+.summary .v { font-family: var(--f-crt); font-size: 26px; font-variant-numeric: tabular-nums; }
+
+footer { color: var(--plastic-hi); font-size: 12px; opacity: .8; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .screen .line { animation: none; } .screen .cursor::after { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header class="bar bevel">
+    <div class="titlebar"><h1>Bipe Informática</h1><small>Conserto · Montagem · Vacina de vírus</small></div>
+    <div class="stats">
+      <div class="stat sunken"><span class="lbl">Dia</span><b id="sDay">1</b></div>
+      <div class="stat sunken"><span class="lbl">Hora</span><b id="sClock">09:00</b></div>
+      <div class="stat sunken"><span class="lbl">Caixa</span><b id="sCash">R$ 100</b></div>
+      <div class="stat sunken"><span class="lbl">Fama</span><span id="sRep" class="stars"></span></div>
+      <button id="soundBtn" class="ghost" type="button">Som: ligado</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel bevel" aria-label="Balcão">
+      <h2>Balcão</h2>
+      <div class="who">
+        <div id="avatar" class="avatar">?</div>
+        <div><div id="cName" class="name"></div><div id="cDesc" class="desc"></div></div>
+      </div>
+      <div id="complaint" class="bubble"></div>
+      <div class="os" id="osNum"></div>
+      <div class="postit">
+        <h3>Cola dos bipes (não tirar!!)</h3>
+        <table>
+          <tr><td>1 curto</td><td>Passou no teste. Tudo OK no hardware.</td></tr>
+          <tr><td>longo, sem parar</td><td>Memória RAM</td></tr>
+          <tr><td>1 longo + 2 curtos</td><td>Placa de vídeo</td></tr>
+          <tr><td>silêncio total</td><td>Energia / fonte</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="bench bevel" aria-label="Bancada">
+      <div class="monitor bevel">
+        <div id="screen" class="screen" aria-live="polite"></div>
+        <span id="led" class="led"></span>
+      </div>
+      <div class="desk">
+        <div class="hint" id="hint">Cada teste gasta tempo do seu dia. Investigue o suficiente e dê o diagnóstico.</div>
+      </div>
+      <div id="sheet" class="sheet sunken" hidden></div>
+    </section>
+
+    <section class="panel bevel" aria-label="Ferramentas">
+      <h2>Ferramentas</h2>
+      <div class="tools" id="tools"></div>
+      <button id="diagBtn" class="primary" type="button">Dar o diagnóstico</button>
+    </section>
+  </div>
+  <footer>Protótipo do ciclo de diagnóstico. A loja abre às 09:00 e fecha às 18:00. O aluguel de R$ 60 sai no fim do dia.</footer>
+</div>
+
+<script>
+const OPEN = 9 * 60, CLOSE = 18 * 60, RENT = 60, FIX_MIN = 30;
+
+const TESTS = [
+  { id: 'talk',  label: 'Conversar com o cliente',  min: 5,  cmd: 'CONVERSA' },
+  { id: 'power', label: 'Ligar o PC',               min: 5,  cmd: 'POWER ON' },
+  { id: 'open',  label: 'Abrir o gabinete',         min: 10, cmd: 'ABRIR GABINETE' },
+  { id: 'psu',   label: 'Multímetro na fonte',      min: 10, cmd: 'MULTIMETRO' },
+  { id: 'av',    label: 'Antivírus no disquete',    min: 20, cmd: 'A:\\VACINA.EXE C:' },
+  { id: 'scan',  label: 'Rodar o ScanDisk',         min: 25, cmd: 'SCANDISK C: /SURFACE' },
+  { id: 'dev',   label: 'Gerenciador de Dispositivos', min: 10, cmd: 'SISTEMA > DISPOSITIVOS' },
+];
+
+// noPost: the machine dies before the BIOS finishes, so software tools cannot run
+const FAULTS = {
+  ram: { fix: 'Reencaixar a memória RAM', price: 25, part: 0, day: 1, noPost: true,
+    says: ['Ele fica apitando que nem alarme de carro.', 'Liga, faz piiii, piiii, e não aparece nada.'],
+    talk: ['"Abri pra tirar o pó com o aspirador semana passada."', '"Meu filho quis ver como era por dentro..."'],
+    power: { beep: 'L L L L L', text: 'Bipes longos sem parar. Monitor sem sinal.' },
+    open: 'Um pente de memória está meio solto no slot, torto.' },
+  video: { fix: 'Reencaixar a placa de vídeo', price: 25, part: 0, day: 1, noPost: true,
+    says: ['Liga, apita diferente e a tela não acende.', 'Faz um bipe comprido e uns curtinhos.'],
+    talk: ['"Mudei ele de mesa e ele deu uma batidinha no chão."', '"O técnico do meu cunhado mexeu nele ontem."'],
+    power: { beep: 'L S S', text: '1 bipe longo, 2 curtos. Monitor sem sinal.' },
+    open: 'A placa de vídeo está levantada, metade fora do slot PCI.' },
+  psu: { fix: 'Trocar a fonte', price: 90, part: 45, day: 1, noPost: true,
+    says: ['Aperto o botão e nada. Morto.', 'Ele está com cheiro de churrasco.'],
+    talk: ['"Caiu um raio aqui perto ontem à noite."', '"A luz piscou e ele fez um estalo."'],
+    power: { beep: '', text: 'Nada. Nem bipe, nem LED, nem cooler girando.' },
+    psu: '+12V: 0,0V   +5V: 0,0V   Cheiro de queimado na fonte.',
+    open: 'Cheiro forte de queimado vindo da fonte. O resto parece normal.' },
+  virus: { fix: 'Remover o vírus', price: 40, part: 0, day: 1,
+    says: ['Aparece uma mensagem estranha quando liga.', 'Meus trabalhos da faculdade sumiram!'],
+    talk: ['"Peguei um disquete de joguinhos com meu primo."', '"Instalei um programa que veio numa revista."'],
+    power: { beep: 'S', text: 'Bipe curto. Na tela: "SEU PC AGORA E MEU ;)" e depois o Windows 95 carrega.' },
+    av: 'ALERTA: vírus PAMONHA.BOOT encontrado no setor de boot!' },
+  hd: { fix: 'Trocar o HD', price: 180, part: 110, day: 1,
+    says: ['Trava na tela das nuvenzinhas do Windows.', 'Faz um barulho tec-tec e congela.'],
+    talk: ['"Ele faz um barulhinho de relógio às vezes."', '"Tá ficando cada vez mais lento pra abrir."'],
+    power: { beep: 'S', text: 'Bipe curto. Começa a carregar o Windows 95 e trava na abertura.' },
+    open: 'Dá pra ouvir um "tec... tec... tec" vindo do HD.',
+    scan: '327 clusters defeituosos encontrados. Disco em estado crítico.',
+    av: 'Varredura interrompida: erro de leitura na unidade C:',
+    dev: 'Não dá: o Windows trava antes de abrir.' },
+  user: { fix: 'Explicar pro cliente', price: 15, part: 0, day: 1,
+    says: ['A tela fica preta o tempo todo!', 'Comprei ontem e já veio com defeito.'],
+    talk: ['"O monitor eu deixo desligado no filtro de linha, pra não gastar luz."', '"Esse botão grande na tela eu nunca liguei, precisa?"'],
+    power: { beep: 'S', text: 'Bipe curto. Tudo liga normal aqui na bancada. O cliente parece confuso.' } },
+  cooler: { fix: 'Limpar e trocar o cooler', price: 35, part: 10, day: 2,
+    says: ['Ele desliga sozinho do nada.', 'Fica muito quente e apaga.'],
+    talk: ['"Ele desliga mais à tarde, quando esquenta."', '"O gato adora dormir em cima dele."'],
+    power: { beep: 'S', text: 'Bipe curto. Windows carrega normal... e 2 minutos depois o PC desliga sozinho.' },
+    open: 'Cooler do processador travado de poeira e pelo de gato.' },
+  cmos: { fix: 'Trocar a bateria da placa-mãe', price: 20, part: 5, day: 2,
+    says: ['A hora tá sempre errada.', 'Toda vez pede pra apertar F1.'],
+    talk: ['"Ele esquece a data toda vez que tiro da tomada."', '"Meu relógio do Windows diz que é 1980."'],
+    power: { beep: 'S', text: 'Bipe curto. "CMOS checksum error - Defaults loaded. Press F1". Data: 01/01/1980.' },
+    open: 'A bateria redonda da placa-mãe está oxidada.' },
+  irq: { fix: 'Reconfigurar IRQ nos jumpers', price: 45, part: 0, day: 2,
+    says: ['O som parou de funcionar.', 'Meu CD de pagode não toca mais.'],
+    talk: ['"Instalei uma placa de rede pra jogar com os amigos."', '"Coloquei uma placa nova que comprei na feira."'],
+    power: { beep: 'S', text: 'Bipe curto. Windows carrega. Nenhum som de abertura.' },
+    dev: 'CONFLITO: placa de som e placa de rede usando a mesma IRQ 5.' },
+};
+
+const GENERIC_SAYS = ['Ele não funciona mais.', 'Tá dando pau, moço.', 'Estragou e eu preciso dele pra amanhã!', 'Não sei explicar, só sei que não vai.'];
+const GENERIC_TALK = ['"Eu não mexi em nada, juro."', '"Tava ótimo ontem."', '"Meu sobrinho disse que é a placa-mãe."', '"Quanto vai ficar isso, hein?"'];
+
+const PEOPLE = [
+  ['Dona Cida', 'aposentada, usa pra jogar Paciência'],
+  ['Seu Valdir', 'dono da mecânica da esquina'],
+  ['Marquinhos', '12 anos, veio com a mãe'],
+  ['Dr. Hélio', 'dentista, agenda no computador'],
+  ['Tia Neide', 'faz convites de casamento'],
+  ['Jéssica', 'estuda pro vestibular'],
+  ['Kleber', 'tem uma banda de garagem'],
+  ['Seu Ming', 'da pastelaria, controla o estoque'],
+  ['Pastor Edson', 'imprime o boletim da igreja'],
+  ['Renata', 'contadora, muito apressada'],
+  ['Gilmar', 'acha que entende de informática'],
+  ['Vó Zulmira', 'ganhou do neto no Natal'],
+];
+const COLORS = ['#a8432f', '#2e6f9e', '#6b4f8a', '#3f7a3b', '#9a6a1e', '#7a3a5a', '#2f6e6a', '#5a5a2a'];
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const fmtTime = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const brl = (v) => (v < 0 ? '-R$ ' : 'R$ ') + Math.abs(v);
+
+let S;
+let soundOn = true;
+
+function newGame() {
+  S = { day: 1, clock: OPEN, cash: 100, rep: 3, osNo: 41, cust: null, phase: 'play', stats: blankStats(), last: null };
+  nextCustomer();
+}
+function blankStats() { return { served: 0, right: 0, wrong: 0, earned: 0 }; }
+
+function unlocked() { return Object.keys(FAULTS).filter((k) => FAULTS[k].day <= S.day); }
+
+function nextCustomer() {
+  const fault = pick(unlocked());
+  const f = FAULTS[fault];
+  const [name, desc] = pick(PEOPLE);
+  S.osNo += 1;
+  S.cust = {
+    name, desc, color: pick(COLORS), fault,
+    says: Math.random() < 0.45 ? pick(GENERIC_SAYS) : pick(f.says),
+    done: {}, log: [],
+  };
+  S.phase = 'play';
+  S.last = null;
+}
+
+function resultFor(faultKey, testId) {
+  const f = FAULTS[faultKey];
+  const noRun = 'Não dá pra rodar: o PC não passa do teste de inicialização.';
+  switch (testId) {
+    case 'talk': return Math.random() < 0.65 ? pick(f.talk) : pick(GENERIC_TALK);
+    case 'power': return f.power;
+    case 'open': return f.open || 'Tudo encaixado. Poeira normal pra 1996.';
+    case 'psu': return f.psu || '+12V: 12,1V   +5V: 5,0V   Fonte OK.';
+    case 'av': return f.av || (f.noPost ? noRun : 'Nenhum vírus encontrado. Disco limpo.');
+    case 'scan': return f.scan || (f.noPost ? noRun : '0 clusters defeituosos. Disco OK.');
+    case 'dev': return f.dev || (f.noPost ? noRun : 'Nenhum conflito de dispositivo.');
+  }
+}
+
+function runTest(id) {
+  const c = S.cust;
+  if (S.phase !== 'play' || c.done[id]) return;
+  const t = TESTS.find((x) => x.id === id);
+  c.done[id] = true;
+  S.clock += t.min;
+  const r = resultFor(c.fault, id);
+  const text = typeof r === 'string' ? r : r.text;
+  c.log.push({ t: fmtTime(S.clock), cmd: t.cmd, text });
+  if (id === 'power') {
+    c.ledOn = r.beep !== '';
+    playBeeps(r.beep);
+  }
+  render();
+}
+
+// --- sound: square-wave PC speaker ---
+let actx = null;
+function playBeeps(pattern) {
+  if (!soundOn || !pattern) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime + 0.05;
+    for (const p of pattern.split(' ')) {
+      const dur = p === 'L' ? 0.55 : 0.14;
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'square'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.06, t);
+      g.gain.setValueAtTime(0, t + dur);
+      o.connect(g).connect(actx.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+      t += dur + 0.22;
+    }
+  } catch (e) { /* audio is optional */ }
+}
+
+// --- diagnosis flow ---
+function openDiag() { if (S.phase === 'play') { S.phase = 'diag'; render(); } }
+
+function chooseFix(key) { S.chosen = key; S.phase = 'price'; render(); }
+
+function charge(double) {
+  const c = S.cust, chosen = FAULTS[S.chosen];
+  const correct = S.chosen === c.fault;
+  S.clock += FIX_MIN;
+  S.stats.served += 1;
+  let delta = 0, repDelta = 0, lines = [];
+  if (correct) {
+    S.stats.right += 1;
+    const price = double ? chosen.price * 2 : chosen.price;
+    delta = price - chosen.part;
+    if (double) {
+      if (Math.random() < 0.4) {
+        repDelta = -2;
+        lines.push(`${c.name} mostrou a nota pro cunhado, que "entende de computador". A notícia de que você cobra caro já corre o bairro.`);
+      } else {
+        lines.push(`${c.name} pagou sem piscar. Por enquanto.`);
+      }
+    } else {
+      repDelta = 1;
+      lines.push(`${c.name} saiu feliz e prometeu indicar a loja.`);
+      if (S.rep >= 4) { delta += 10; lines.push('Deixou R$ 10 de gorjeta.'); }
+    }
+    lines.unshift(`Acertou: ${chosen.fix.toLowerCase()} resolveu.`);
+  } else {
+    S.stats.wrong += 1;
+    delta = -chosen.part;
+    repDelta = -1;
+    lines.push(`${c.name} voltou duas horas depois: "continua igual!" e foi embora sem pagar.`);
+    lines.push(`O problema real era: ${FAULTS[c.fault].fix.toLowerCase()}.`);
+    if (chosen.part) lines.push(`Você perdeu ${brl(chosen.part)} na peça.`);
+  }
+  S.cash += delta;
+  S.stats.earned += delta;
+  S.rep = Math.max(0, Math.min(5, S.rep + repDelta));
+  S.last = { correct, delta, repDelta, lines };
+  S.phase = 'result';
+  render();
+}
+
+function afterResult() {
+  if (S.rep <= 0) { S.phase = 'over'; S.overWhy = 'Ninguém mais entra na loja. A fama acabou.'; return render(); }
+  if (S.clock >= CLOSE - 15) { endDay(); return; }
+  nextCustomer();
+  render();
+}
+
+function endDay() {
+  S.cash -= RENT;
+  S.phase = S.cash < 0 ? 'over' : 'dayEnd';
+  if (S.phase === 'over') S.overWhy = 'O aluguel venceu e o caixa não fechou. A loja baixou as portas.';
+  render();
+}
+
+function nextDay() {
+  S.day += 1;
+  S.clock = OPEN;
+  S.stats = blankStats();
+  nextCustomer();
+  render();
+}
+
+// --- render ---
+function esc(s) { return String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+
+function render() {
+  const c = S.cust;
+  $('sDay').textContent = S.day;
+  $('sClock').textContent = fmtTime(Math.min(S.clock, 23 * 60));
+  $('sClock').style.color = S.clock >= CLOSE - 60 ? 'var(--alert)' : '';
+  $('sCash').textContent = brl(S.cash);
+  $('sRep').innerHTML = '★'.repeat(S.rep) + `<span class="off">${'★'.repeat(5 - S.rep)}</span>`;
+  $('sRep').setAttribute('aria-label', `${S.rep} de 5`);
+
+  $('avatar').textContent = c.name.replace(/^(Dona|Seu|Dr\.|Tia|Vó|Pastor) /, '').slice(0, 2).toUpperCase();
+  $('avatar').style.background = c.color;
+  $('cName').textContent = c.name;
+  $('cDesc').textContent = c.desc;
+  $('complaint').textContent = `"${c.says}"`;
+  $('osNum').textContent = `ORDEM DE SERVIÇO Nº ${String(S.osNo).padStart(4, '0')}`;
+  $('led').classList.toggle('on', !!c.ledOn);
+
+  const scr = $('screen');
+  let html = `<div class="line">BIPE BIOS v1.06 · BANCADA 1</div><div class="line">PC de ${esc(c.name)} conectado.</div><div class="line">&nbsp;</div>`;
+  for (const l of c.log) {
+    html += `<div class="line"><span class="ts">[${l.t}]</span> <span class="cmd">&gt; ${esc(l.cmd)}</span></div><div class="line">${esc(l.text)}</div><div class="line">&nbsp;</div>`;
+  }
+  html += `<div class="line cursor">C:\\&gt;</div>`;
+  scr.innerHTML = html;
+  scr.scrollTop = scr.scrollHeight;
+
+  const playing = S.phase === 'play';
+  $('tools').innerHTML = TESTS.map((t) =>
+    `<button type="button" id="t-${t.id}" class="tool${c.done[t.id] ? ' used' : ''}" data-test="${t.id}" ${!playing || c.done[t.id] ? 'disabled' : ''}>
+      <span>${t.label}</span><span class="min">${t.min} min</span></button>`).join('');
+  $('diagBtn').disabled = !playing;
+
+  const n = Object.keys(c.done).length;
+  $('hint').textContent = playing
+    ? (n === 0 ? 'Cada teste gasta tempo do seu dia. Investigue o suficiente e dê o diagnóstico.' : `${n} teste${n > 1 ? 's' : ''} feito${n > 1 ? 's' : ''}. Já dá pra cravar, ou investiga mais?`)
+    : '';
+
+  renderSheet();
+}
+
+function renderSheet() {
+  const sh = $('sheet');
+  const c = S.cust;
+  if (S.phase === 'play') { sh.hidden = true; sh.innerHTML = ''; return; }
+  sh.hidden = false;
+  if (S.phase === 'diag') {
+    sh.innerHTML = `<h2>Qual é o defeito?</h2>
+      <div class="opts">${unlocked().map((k) => `<button type="button" id="f-${k}" class="opt" data-fix="${k}"><span>${FAULTS[k].fix}</span><span>${brl(FAULTS[k].price)}</span></button>`).join('')}</div>
+      <div class="row"><button type="button" class="ghost" data-act="back">Voltar e investigar mais</button></div>`;
+  } else if (S.phase === 'price') {
+    const f = FAULTS[S.chosen];
+    sh.innerHTML = `<h2>${f.fix}. Quanto cobrar de ${esc(c.name)}?</h2>
+      <div class="row">
+        <button type="button" id="p-fair" class="primary" data-price="fair">Preço justo · ${brl(f.price)}</button>
+        <button type="button" id="p-double" data-price="double">Cobrar o dobro · ${brl(f.price * 2)}</button>
+      </div>
+      <div class="hint">${f.part ? `A peça custa ${brl(f.part)} pra você. ` : ''}Cobrar o dobro rende mais, mas o bairro conversa.</div>`;
+  } else if (S.phase === 'result') {
+    const r = S.last;
+    sh.innerHTML = `<div class="verdict ${r.correct ? 'ok' : 'bad'}">${r.lines.map(esc).join('<br>')}</div>
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <span class="money">${r.delta >= 0 ? '+' : ''}${brl(r.delta)} · fama ${r.repDelta > 0 ? '+' : ''}${r.repDelta}</span>
+        <button type="button" id="nextBtn" class="primary" data-act="next">${S.clock >= CLOSE - 15 ? 'Fechar a loja' : 'Chamar o próximo'}</button>
+      </div>`;
+  } else if (S.phase === 'dayEnd') {
+    const st = S.stats;
+    sh.innerHTML = `<h2>Fim do dia ${S.day}</h2>
+      <div class="summary">
+        <div><div class="k">Atendidos</div><div class="v">${st.served}</div></div>
+        <div><div class="k">Acertos</div><div class="v">${st.right}/${st.served}</div></div>
+        <div><div class="k">Faturou</div><div class="v">${brl(st.earned)}</div></div>
+        <div><div class="k">Aluguel</div><div class="v">-${brl(RENT)}</div></div>
+        <div><div class="k">Caixa</div><div class="v">${brl(S.cash)}</div></div>
+      </div>
+      ${S.day === 1 ? '<div class="hint">Amanhã chegam defeitos novos: superaquecimento, bateria da placa-mãe e conflito de IRQ.</div>' : ''}
+      <div class="row"><button type="button" id="dayBtn" class="primary" data-act="day">Abrir a loja no dia ${S.day + 1}</button></div>`;
+  } else if (S.phase === 'over') {
+    sh.innerHTML = `<h2>Fim de jogo no dia ${S.day}</h2>
+      <div class="verdict bad">${esc(S.overWhy)}</div>
+      <div class="row"><button type="button" id="restartBtn" class="primary" data-act="restart">Abrir uma loja nova</button></div>`;
+  }
+}
+
+// --- events ---
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  if (b.dataset.test) runTest(b.dataset.test);
+  else if (b.id === 'diagBtn') openDiag();
+  else if (b.dataset.fix) chooseFix(b.dataset.fix);
+  else if (b.dataset.price) charge(b.dataset.price === 'double');
+  else if (b.dataset.act === 'back') { S.phase = 'play'; render(); }
+  else if (b.dataset.act === 'next') afterResult();
+  else if (b.dataset.act === 'day') nextDay();
+  else if (b.dataset.act === 'restart') { newGame(); render(); }
+  else if (b.id === 'soundBtn') { soundOn = !soundOn; b.textContent = `Som: ${soundOn ? 'ligado' : 'desligado'}`; }
+});
+
+function start(data) {
+  if (data && data.S && data.S.cust) S = data.S; else newGame();
+  render();
+}
+start({});
+</script>
