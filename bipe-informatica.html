@@ -126,6 +126,7 @@ button {
 button:active:not(:disabled) { border-color: var(--plastic-lo) var(--plastic-hi) var(--plastic-hi) var(--plastic-lo); transform: translateY(1px); }
 button:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
 button:disabled { color: var(--plastic-lo); cursor: default; }
+button[aria-pressed="true"] { background: var(--postit); border-color: var(--plastic-lo) var(--plastic-hi) var(--plastic-hi) var(--plastic-lo); font-weight: 600; }
 .tool { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
 .tool .min { font-family: var(--f-crt); font-size: 18px; color: var(--ink-soft); white-space: nowrap; }
 .tool.used { background: var(--plastic-lo); color: var(--ink-soft); }
@@ -205,7 +206,7 @@ footer { color: var(--plastic-hi); font-size: 12px; opacity: .8; text-align: cen
       <button id="diagBtn" class="primary" type="button">Dar o diagnóstico</button>
     </section>
   </div>
-  <footer>Protótipo do ciclo de diagnóstico. A loja abre às 09:00 e fecha às 18:00. O aluguel de R$ 60 sai no fim do dia.</footer>
+  <footer>Protótipo v0.2 do ciclo de diagnóstico. A loja abre às 09:00 e fecha às 18:00. O aluguel de R$ 60 sai no fim do dia.</footer>
 </div>
 
 <script>
@@ -292,6 +293,20 @@ const PEOPLE = [
 ];
 const COLORS = ['#a8432f', '#2e6f9e', '#6b4f8a', '#3f7a3b', '#9a6a1e', '#7a3a5a', '#2f6e6a', '#5a5a2a'];
 
+const PY_FACTOR = 0.4, PY_FAIL = 0.35, RETURN_CHANCE = 0.5, REGULAR_CHANCE = 0.4;
+const WARRANTY_SAYS = [
+  (fix) => `Moço, aquele conserto (${fix}) não durou nem dois dias!`,
+  () => 'Voltou o mesmo defeito. Você colocou peça boa mesmo?',
+  () => 'Tá igualzinho a antes. Isso tem garantia, né?',
+];
+const REDO_SAYS = ['Da última vez você não resolveu nada. Continua igual!', 'Voltei. E agora, vai acertar?', 'Paguei nada, mas perdi a viagem. Olha de novo, por favor.'];
+
+function greetFor(mem) {
+  if (mem.burned) return 'Meu cunhado viu a nota da última vez. Hoje eu quero preço justo, hein.';
+  if (mem.happy) return pick(['Voltei! Da última vez você salvou minha vida.', 'Indiquei vocês pra vizinha toda!', 'Só confio em vocês agora.']);
+  return 'Oi de novo.';
+}
+
 const $ = (id) => document.getElementById(id);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const fmtTime = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -301,7 +316,8 @@ let S;
 let soundOn = true;
 
 function newGame() {
-  S = { day: 1, clock: OPEN, cash: 100, rep: 3, osNo: 41, cust: null, phase: 'play', stats: blankStats(), last: null };
+  S = { day: 1, clock: OPEN, cash: 100, rep: 3, osNo: 41, cust: null, phase: 'play', stats: blankStats(), last: null,
+        known: {}, returns: [], partSrc: 'orig' };
   nextCustomer();
 }
 function blankStats() { return { served: 0, right: 0, wrong: 0, earned: 0 }; }
@@ -309,17 +325,43 @@ function blankStats() { return { served: 0, right: 0, wrong: 0, earned: 0 }; }
 function unlocked() { return Object.keys(FAULTS).filter((k) => FAULTS[k].day <= S.day); }
 
 function nextCustomer() {
+  S.osNo += 1;
+  S.phase = 'play';
+  S.last = null;
+  S.partSrc = 'orig';
+
+  // someone coming back: a failed Paraguay part or a wrong diagnosis
+  const dueIdx = S.returns.findIndex((r) => r.dueDay <= S.day);
+  if (dueIdx >= 0 && Math.random() < RETURN_CHANCE) {
+    const r = S.returns.splice(dueIdx, 1)[0];
+    const f = FAULTS[r.fault];
+    S.cust = { name: r.name, desc: r.desc, color: r.color, fault: r.fault, kind: r.kind, done: {}, log: [],
+      says: r.kind === 'warranty' ? pick(WARRANTY_SAYS)(f.fix.toLowerCase()) : pick(REDO_SAYS) };
+    if (r.kind === 'warranty') {
+      S.cust.log.push({ t: fmtTime(S.clock), cmd: 'CONFERIR NOTA', text: `Garantia: ${f.fix.toLowerCase()} com peça do Paraguai. A peça queimou.` });
+      S.phase = 'warranty';
+    }
+    return;
+  }
+
+  const busy = new Set(S.returns.map((r) => r.name));
+  const free = PEOPLE.filter((p) => !busy.has(p[0]));
+  const pool = free.length ? free : PEOPLE;
+  const regulars = pool.filter((p) => S.known[p[0]]);
+  const [name, desc] = regulars.length && Math.random() < REGULAR_CHANCE ? pick(regulars) : pick(pool);
+  const mem = S.known[name];
   const fault = pick(unlocked());
   const f = FAULTS[fault];
-  const [name, desc] = pick(PEOPLE);
-  S.osNo += 1;
   S.cust = {
-    name, desc, color: pick(COLORS), fault,
+    name, desc, color: mem ? mem.color : pick(COLORS), fault, kind: mem ? 'regular' : 'new',
+    greet: mem ? greetFor(mem) : '',
     says: Math.random() < 0.45 ? pick(GENERIC_SAYS) : pick(f.says),
     done: {}, log: [],
   };
-  S.phase = 'play';
-  S.last = null;
+}
+
+function memoryOf(c) {
+  return (S.known[c.name] ||= { visits: 0, color: c.color, happy: false, burned: false, desc: c.desc });
 }
 
 function resultFor(faultKey, testId) {
@@ -380,38 +422,75 @@ function chooseFix(key) { S.chosen = key; S.phase = 'price'; render(); }
 function charge(double) {
   const c = S.cust, chosen = FAULTS[S.chosen];
   const correct = S.chosen === c.fault;
+  const mem = memoryOf(c);
+  const usedPy = chosen.part > 0 && S.partSrc === 'py';
+  const partCost = usedPy ? Math.round(chosen.part * PY_FACTOR) : chosen.part;
   S.clock += FIX_MIN;
   S.stats.served += 1;
+  mem.visits += 1;
   let delta = 0, repDelta = 0, lines = [];
   if (correct) {
     S.stats.right += 1;
     const price = double ? chosen.price * 2 : chosen.price;
-    delta = price - chosen.part;
+    delta = price - partCost;
     if (double) {
       if (Math.random() < 0.4) {
         repDelta = -2;
+        mem.burned = true; mem.happy = false;
         lines.push(`${c.name} mostrou a nota pro cunhado, que "entende de computador". A notícia de que você cobra caro já corre o bairro.`);
       } else {
         lines.push(`${c.name} pagou sem piscar. Por enquanto.`);
       }
     } else {
       repDelta = 1;
-      lines.push(`${c.name} saiu feliz e prometeu indicar a loja.`);
+      mem.happy = true;
+      lines.push(c.kind === 'redo' ? `Desta vez resolveu. ${c.name} voltou a confiar na loja.` : `${c.name} saiu feliz e prometeu indicar a loja.`);
       if (S.rep >= 4) { delta += 10; lines.push('Deixou R$ 10 de gorjeta.'); }
     }
     lines.unshift(`Acertou: ${chosen.fix.toLowerCase()} resolveu.`);
+    // the gamble stays hidden until the customer walks back in
+    if (usedPy && Math.random() < PY_FAIL) {
+      S.returns.push({ name: c.name, desc: c.desc, color: c.color, fault: c.fault, kind: 'warranty', dueDay: S.day + (Math.random() < 0.5 ? 0 : 1) });
+    }
   } else {
     S.stats.wrong += 1;
-    delta = -chosen.part;
+    delta = -partCost;
     repDelta = -1;
-    lines.push(`${c.name} voltou duas horas depois: "continua igual!" e foi embora sem pagar.`);
+    mem.happy = false;
+    lines.push(`${c.name} testou em casa e nada. Foi embora sem pagar e disse que volta amanhã.`);
     lines.push(`O problema real era: ${FAULTS[c.fault].fix.toLowerCase()}.`);
-    if (chosen.part) lines.push(`Você perdeu ${brl(chosen.part)} na peça.`);
+    if (partCost) lines.push(`Você perdeu ${brl(partCost)} na peça.`);
+    S.returns.push({ name: c.name, desc: c.desc, color: c.color, fault: c.fault, kind: 'redo', dueDay: S.day + 1 });
   }
   S.cash += delta;
   S.stats.earned += delta;
   S.rep = Math.max(0, Math.min(5, S.rep + repDelta));
   S.last = { correct, delta, repDelta, lines };
+  S.phase = 'result';
+  render();
+}
+
+function warranty(honor) {
+  const c = S.cust, f = FAULTS[c.fault];
+  const mem = memoryOf(c);
+  S.clock += 20;
+  S.stats.served += 1;
+  mem.visits += 1;
+  let delta = 0, repDelta, lines;
+  if (honor) {
+    delta = -f.part;
+    repDelta = 1;
+    mem.happy = true; mem.burned = false;
+    lines = [`Você trocou de graça, agora com peça original (${brl(f.part)}).`, `${c.name} agradeceu e disse que garantia assim não existe em lugar nenhum.`];
+  } else {
+    repDelta = -2;
+    mem.happy = false; mem.burned = true;
+    lines = ['Você disse que a garantia não cobre "mau uso".', `${c.name} saiu xingando e prometeu contar pra rua inteira.`];
+  }
+  S.cash += delta;
+  S.stats.earned += delta;
+  S.rep = Math.max(0, Math.min(5, S.rep + repDelta));
+  S.last = { correct: honor, delta, repDelta, lines };
   S.phase = 'result';
   render();
 }
@@ -453,8 +532,11 @@ function render() {
   $('avatar').textContent = c.name.replace(/^(Dona|Seu|Dr\.|Tia|Vó|Pastor) /, '').slice(0, 2).toUpperCase();
   $('avatar').style.background = c.color;
   $('cName').textContent = c.name;
-  $('cDesc').textContent = c.desc;
-  $('complaint').textContent = `"${c.says}"`;
+  const mem = S.known[c.name];
+  const tag = c.kind === 'warranty' ? 'voltou pela garantia' : c.kind === 'redo' ? 'voltou: o defeito continua'
+    : mem ? `${mem.visits + 1}ª visita` : 'cliente novo';
+  $('cDesc').textContent = `${c.desc} · ${tag}`;
+  $('complaint').textContent = `"${c.greet ? c.greet + ' ' : ''}${c.says}"`;
   $('osNum').textContent = `ORDEM DE SERVIÇO Nº ${String(S.osNo).padStart(4, '0')}`;
   $('led').classList.toggle('on', !!c.ledOn);
 
@@ -490,14 +572,26 @@ function renderSheet() {
     sh.innerHTML = `<h2>Qual é o defeito?</h2>
       <div class="opts">${unlocked().map((k) => `<button type="button" id="f-${k}" class="opt" data-fix="${k}"><span>${FAULTS[k].fix}</span><span>${brl(FAULTS[k].price)}</span></button>`).join('')}</div>
       <div class="row"><button type="button" class="ghost" data-act="back">Voltar e investigar mais</button></div>`;
+  } else if (S.phase === 'warranty') {
+    const f = FAULTS[c.fault];
+    sh.innerHTML = `<h2>Garantia: o conserto não durou</h2>
+      <div class="hint">A peça do Paraguai que você usou em "${f.fix.toLowerCase()}" queimou. ${esc(c.name)} quer o conserto de graça.</div>
+      <div class="row">
+        <button type="button" id="w-honor" class="primary" data-war="honor">Honrar a garantia · peça original ${brl(f.part)}</button>
+        <button type="button" id="w-deny" data-war="deny">Negar: "foi mau uso"</button>
+      </div>`;
   } else if (S.phase === 'price') {
     const f = FAULTS[S.chosen];
+    const pyCost = Math.round(f.part * PY_FACTOR);
+    const burned = S.known[c.name]?.burned;
+    const src = (v, label) => `<button type="button" id="src-${v}" data-src="${v}" aria-pressed="${S.partSrc === v}">${label}</button>`;
     sh.innerHTML = `<h2>${f.fix}. Quanto cobrar de ${esc(c.name)}?</h2>
+      ${f.part ? `<div class="row" style="align-items:center"><span class="hint" style="flex:none">Peça:</span>${src('orig', `Original · ${brl(f.part)}`)}${src('py', `Do Paraguai · ${brl(pyCost)}`)}</div>` : ''}
       <div class="row">
         <button type="button" id="p-fair" class="primary" data-price="fair">Preço justo · ${brl(f.price)}</button>
-        <button type="button" id="p-double" data-price="double">Cobrar o dobro · ${brl(f.price * 2)}</button>
+        <button type="button" id="p-double" data-price="double" ${burned ? 'disabled' : ''}>${burned ? 'Cobrar o dobro (não cai mais nessa)' : `Cobrar o dobro · ${brl(f.price * 2)}`}</button>
       </div>
-      <div class="hint">${f.part ? `A peça custa ${brl(f.part)} pra você. ` : ''}Cobrar o dobro rende mais, mas o bairro conversa.</div>`;
+      <div class="hint">${f.part ? 'Peça do Paraguai sai barata, mas nem sempre dura. ' : ''}Cobrar o dobro rende mais, mas o bairro conversa.</div>`;
   } else if (S.phase === 'result') {
     const r = S.last;
     sh.innerHTML = `<div class="verdict ${r.correct ? 'ok' : 'bad'}">${r.lines.map(esc).join('<br>')}</div>
@@ -514,8 +608,9 @@ function renderSheet() {
         <div><div class="k">Faturou</div><div class="v">${brl(st.earned)}</div></div>
         <div><div class="k">Aluguel</div><div class="v">-${brl(RENT)}</div></div>
         <div><div class="k">Caixa</div><div class="v">${brl(S.cash)}</div></div>
+        <div><div class="k">Clientes conhecidos</div><div class="v">${Object.keys(S.known).length}</div></div>
       </div>
-      ${S.day === 1 ? '<div class="hint">Amanhã chegam defeitos novos: superaquecimento, bateria da placa-mãe e conflito de IRQ.</div>' : ''}
+      ${S.day === 1 ? '<div class="hint">Amanhã chegam defeitos novos: superaquecimento, bateria da placa-mãe e conflito de IRQ. E quem você atendeu hoje pode voltar.</div>' : ''}
       <div class="row"><button type="button" id="dayBtn" class="primary" data-act="day">Abrir a loja no dia ${S.day + 1}</button></div>`;
   } else if (S.phase === 'over') {
     sh.innerHTML = `<h2>Fim de jogo no dia ${S.day}</h2>
@@ -532,6 +627,8 @@ document.addEventListener('click', (e) => {
   else if (b.id === 'diagBtn') openDiag();
   else if (b.dataset.fix) chooseFix(b.dataset.fix);
   else if (b.dataset.price) charge(b.dataset.price === 'double');
+  else if (b.dataset.src) { S.partSrc = b.dataset.src; render(); }
+  else if (b.dataset.war) warranty(b.dataset.war === 'honor');
   else if (b.dataset.act === 'back') { S.phase = 'play'; render(); }
   else if (b.dataset.act === 'next') afterResult();
   else if (b.dataset.act === 'day') nextDay();
@@ -540,7 +637,7 @@ document.addEventListener('click', (e) => {
 });
 
 function start(data) {
-  if (data && data.S && data.S.cust) S = data.S; else newGame();
+  if (data && data.S && data.S.cust) { S = data.S; S.known ||= {}; S.returns ||= []; S.partSrc ||= 'orig'; } else newGame();
   render();
 }
 start({});
