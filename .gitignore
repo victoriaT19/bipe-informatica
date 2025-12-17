@@ -8,6 +8,8 @@
 [Uu]ser[Ss]ettings/
 [Mm]emoryCaptures/
 [Rr]ecordings/
+# Burst output left behind by the web build
+UnityProject/Data/
 
 # IDE files Unity regenerates
 .vs/

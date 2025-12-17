@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/_Bipe/Scenes/Loja.unity
+    guid: 0396816704515f040976f25ce3dc302b
   m_configObjects: {}

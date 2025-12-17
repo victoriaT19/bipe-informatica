@@ -41,6 +41,21 @@ namespace Bipe
         public static readonly string[] WarrantySays = { "Moço, aquele conserto ({0}) não durou nem dois dias!", "Voltou o mesmo defeito. Você colocou peça boa mesmo?", "Tá igualzinho a antes. Isso tem garantia, né?" };
         public static readonly string[] RedoSays = { "Da última vez você não resolveu nada. Continua igual!", "Voltei. E agora, vai acertar?", "Paguei nada, mas perdi a viagem. Olha de novo, por favor." };
         public static readonly string[] HappyGreets = { "Voltei! Da última vez você salvou minha vida.", "Indiquei vocês pra vizinha toda!", "Só confio em vocês agora." };
+        public static readonly string[] TamperEvidence =
+        {
+            "Os parafusos do gabinete estão espanados: alguém abriu isso aqui há pouco tempo.",
+            "Tem uma chave de fenda de cozinha esquecida dentro do gabinete.",
+            "Falta um parafuso da tampa, e tem marca de dedo na poeira.",
+        };
+
+        // the shop opens with these; the rest are bought at the end of a day
+        public static readonly TestId[] StartingTools = { TestId.Talk, TestId.Power, TestId.Open, TestId.Devices };
+        public static readonly ToolOffer[] Shop =
+        {
+            new ToolOffer { id = TestId.Psu,       name = "Multímetro",                    price = 40, desc = "mede as tensões da fonte" },
+            new ToolOffer { id = TestId.Antivirus, name = "Disquete de antivírus",         price = 30, desc = "acha vírus no setor de boot" },
+            new ToolOffer { id = TestId.ScanDisk,  name = "Disquete de boot com ScanDisk", price = 35, desc = "procura setores defeituosos no HD" },
+        };
 
         public static List<FaultDefinition> Faults()
         {

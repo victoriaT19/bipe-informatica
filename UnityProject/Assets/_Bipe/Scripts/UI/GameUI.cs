@@ -35,7 +35,12 @@ namespace Bipe
             game = g;
             speaker = s;
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // the browser build can't reach the computer's fonts
+            mono = font;
+#else
             mono = Font.CreateDynamicFontFromOSFont(new[] { "Consolas", "Lucida Console", "Courier New" }, 20);
+#endif
             Build();
             game.Changed += OnChanged;
             game.Beeped += p => { if (soundOn) speaker.Play(p); };
@@ -189,9 +194,11 @@ namespace Bipe
             foreach (var t in DefaultContent.Tests)
             {
                 bool done = c.done.Contains(t.id);
+                bool owned = game.HasTool(t.id);
                 var id = t.id;
-                var b = MakeButton(toolsRoot, $"{t.label}   <color=#4a463c>{(done ? "feito" : t.minutes + " min")}</color>", done ? PlasticLo : PlasticHi, () => game.RunTest(id), 16);
-                b.interactable = investigating && !done;
+                string status = !owned ? "comprar no fim do dia" : done ? "feito" : t.minutes + " min";
+                var b = MakeButton(toolsRoot, $"{t.label}   <color=#4a463c>{status}</color>", done || !owned ? PlasticLo : PlasticHi, () => game.RunTest(id), 16);
+                b.interactable = investigating && owned && !done;
             }
             diagBtn.interactable = investigating;
 
@@ -214,7 +221,7 @@ namespace Bipe
             {
                 case Phase.ChooseFix:
                 {
-                    Label(sheetRoot, "<b>Qual é o defeito?</b>", 20, Ink);
+                    Label(sheetRoot, $"<b>Qual é o defeito?</b>  <size=15>marque até {Game.MaxFixes}: alguns PCs têm dois</size>", 20, Ink);
                     var grid = Panel(sheetRoot, Color.clear, "Options");
                     var g = grid.gameObject.AddComponent<GridLayoutGroup>();
                     g.cellSize = new Vector2(390, 44);
@@ -224,27 +231,35 @@ namespace Bipe
                     foreach (var f in game.Unlocked())
                     {
                         var key = f.key;
-                        MakeButton(grid, $"{f.fix}   <color=#4a463c>{Game.Brl(f.price)}</color>", Plastic, () => game.ChooseFix(key), 16);
+                        bool picked = S.chosenFixes.Contains(key);
+                        MakeButton(grid, $"{(picked ? "[x] " : "[ ] ")}{f.fix}   <color=#4a463c>{Game.Brl(f.price)}</color>", picked ? Postit : Plastic, () => game.ToggleFix(key), 16);
                     }
-                    MakeButton(sheetRoot, "Voltar e investigar mais", Plastic, game.BackToInvestigate, 15);
+                    var row = Row(sheetRoot);
+                    var confirm = MakeButton(row, "<b>Confirmar diagnóstico</b>", Amber, game.ConfirmFixes, 17);
+                    confirm.interactable = S.chosenFixes.Count > 0;
+                    MakeButton(row, "Voltar e investigar mais", Plastic, game.BackToInvestigate, 15);
                     break;
                 }
                 case Phase.ChoosePrice:
                 {
-                    var f = game.Fault(S.chosenFix);
+                    var chosen = game.ChosenFaults();
+                    int price = chosen.Sum(f => f.price);
+                    int part = chosen.Sum(f => f.partCost);
+                    int pyPart = chosen.Sum(f => Game.PyCost(f));
                     bool burned = game.CustomerIsBurned;
-                    Label(sheetRoot, $"<b>{f.fix}. Quanto cobrar de {c.name}?</b>", 20, Ink);
-                    if (f.partCost > 0)
+                    Label(sheetRoot, $"<b>{Game.Names(chosen)}. Quanto cobrar de {c.name}?</b>", 20, Ink);
+                    if (part > 0)
                     {
                         var parts = Row(sheetRoot);
-                        MakeButton(parts, $"Peça original · {Game.Brl(f.partCost)}", S.usePyPart ? Plastic : Postit, () => game.SetPyPart(false), 16);
-                        MakeButton(parts, $"Peça do Paraguai · {Game.Brl(Game.PyCost(f))}", S.usePyPart ? Postit : Plastic, () => game.SetPyPart(true), 16);
+                        MakeButton(parts, $"Peças originais · {Game.Brl(part)}", S.usePyPart ? Plastic : Postit, () => game.SetPyPart(false), 16);
+                        MakeButton(parts, $"Peças do Paraguai · {Game.Brl(pyPart)}", S.usePyPart ? Postit : Plastic, () => game.SetPyPart(true), 16);
                     }
                     var prices = Row(sheetRoot);
-                    MakeButton(prices, $"<b>Preço justo · {Game.Brl(f.price)}</b>", Amber, () => game.Charge(false), 17);
-                    var dbl = MakeButton(prices, burned ? "Cobrar o dobro (não cai mais nessa)" : $"Cobrar o dobro · {Game.Brl(f.price * 2)}", Plastic, () => game.Charge(true), 17);
+                    MakeButton(prices, $"<b>Preço justo · {Game.Brl(price)}</b>", Amber, () => game.Charge(false), 17);
+                    var dbl = MakeButton(prices, burned ? "Cobrar o dobro (não cai mais nessa)" : $"Cobrar o dobro · {Game.Brl(price * 2)}", Plastic, () => game.Charge(true), 17);
                     dbl.interactable = !burned;
-                    Label(sheetRoot, (f.partCost > 0 ? "Peça do Paraguai sai barata, mas nem sempre dura. " : "") + "Cobrar o dobro rende mais, mas o bairro conversa.", 15, InkSoft);
+                    Label(sheetRoot, (part > 0 ? "Peça do Paraguai sai barata, mas nem sempre dura. " : "") + "Cobrar o dobro rende mais, mas o bairro conversa. O cliente só paga pelo que era defeito de verdade.", 15, InkSoft);
+                    MakeButton(sheetRoot, "Voltar e mudar o diagnóstico", Plastic, game.BackToFixes, 15);
                     break;
                 }
                 case Phase.Warranty:
@@ -276,7 +291,18 @@ namespace Bipe
                         $"Atendidos: {st.served}    Acertos: {st.right}/{st.served}    Faturou: {Game.Brl(st.earned)}\n" +
                         $"Aluguel: -{Game.Brl(Game.Rent)}    Caixa: {Game.Brl(S.cash)}    Clientes conhecidos: {S.known.Count}", 17, Ink);
                     if (S.day == 1)
-                        Label(sheetRoot, "Amanhã chegam defeitos novos: superaquecimento, bateria da placa-mãe e conflito de IRQ. E quem você atendeu hoje pode voltar.", 15, InkSoft);
+                        Label(sheetRoot, "Amanhã chegam defeitos novos: superaquecimento, bateria da placa-mãe e conflito de IRQ. E tem cliente que vai esconder o que fez no PC.", 15, InkSoft);
+                    else if (S.day == 2)
+                        Label(sheetRoot, "A partir de amanhã, alguns PCs chegam com dois defeitos ao mesmo tempo.", 15, InkSoft);
+
+                    var offers = DefaultContent.Shop.Where(t => !game.HasTool(t.id)).ToList();
+                    Label(sheetRoot, offers.Count > 0 ? "<b>Distribuidora</b>  <size=15>ferramentas pra amanhã</size>" : "Você já tem todas as ferramentas.", 18, Ink);
+                    foreach (var offer in offers)
+                    {
+                        var id = offer.id;
+                        var buy = MakeButton(sheetRoot, $"{offer.name} · {Game.Brl(offer.price)}   <color=#4a463c>{offer.desc}</color>", Plastic, () => game.BuyTool(id), 16);
+                        buy.interactable = S.cash >= offer.price;
+                    }
                     MakeButton(sheetRoot, $"<b>Abrir a loja no dia {S.day + 1}</b>", Amber, game.NextDay, 18);
                     break;
                 }

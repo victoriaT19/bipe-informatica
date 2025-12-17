@@ -17,6 +17,15 @@ namespace Bipe
     }
 
     [Serializable]
+    public class ToolOffer
+    {
+        public TestId id;
+        public string name;
+        public int price;
+        public string desc;
+    }
+
+    [Serializable]
     public class PersonDef
     {
         public string name;
@@ -38,6 +47,10 @@ namespace Bipe
         public string desc;
         public string colorHex;
         public string faultKey;
+        // hidden second defect; empty when there is only one
+        public string secondKey = "";
+        // tells a misleading story when you talk; opening the case shows someone tampered with it
+        public bool liar;
         public CustomerKind kind;
         public string greet = "";
         public string says = "";
@@ -100,7 +113,8 @@ namespace Bipe
         public Customer customer;
         public DayStats stats = new DayStats();
         public Outcome last;
-        public string chosenFix = "";
+        public List<string> chosenFixes = new List<string>();
+        public List<TestId> tools = new List<TestId>();
         public bool usePyPart;
         public string gameOverReason = "";
         public List<KnownCustomer> known = new List<KnownCustomer>();
