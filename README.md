@@ -15,7 +15,7 @@ Jogo de diagnóstico e gestão numa loja de conserto de PCs no Brasil dos anos 9
 
 ## Como abrir na Unity
 
-Precisa da **Unity 6** (o projeto está configurado para a 6000.6.7f1).
+Precisa da **Unity 6**.
 
 1. No Unity Hub, clique em **Adicionar > Adicionar projeto do disco** e escolha a pasta `UnityProject`.
 2. Abra o projeto. Na primeira vez a Unity cria as pastas que faltam (`Library`, configurações), o que leva alguns minutos.
