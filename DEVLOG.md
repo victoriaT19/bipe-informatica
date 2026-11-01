@@ -1,7 +1,5 @@
 # Devlog — Bipe Informática
 
-17/12/2025 · Victoria Tauanny
-
 ## Visão do jogo
 
 Bipe Informática é um jogo de diagnóstico e gestão numa loja de conserto de PCs no Brasil, entre 1994 e 2001. O jogador ouve clientes leigos, testa a máquina e deduz o defeito antes de a loja fechar.
